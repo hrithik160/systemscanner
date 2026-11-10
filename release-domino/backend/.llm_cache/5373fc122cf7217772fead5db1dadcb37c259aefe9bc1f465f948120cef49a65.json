@@ -1,0 +1,5 @@
+{
+  "patch": "--- a/app/cart.py\n+++ b/app/cart.py\n@@ -1,4 +1,5 @@\n import redis_cache\n import utils\n+from bill_calculator import calculate_bill\n \n def add_to_cart(user_id: str, item_id: str, price_cents: int, qty: int = 1) -> dict:\n     if qty <= 0:\n",
+  "endpoint": "Import calculate_bill from bill_calculator.py into app/cart.py",
+  "rationale": "The function calculate_bill from bill_calculator.py is imported into app/cart.py. This allows app/cart.py to utilize the logic from the source file without altering existing structure or styling, fulfilling the minimal connection requirement."
+}

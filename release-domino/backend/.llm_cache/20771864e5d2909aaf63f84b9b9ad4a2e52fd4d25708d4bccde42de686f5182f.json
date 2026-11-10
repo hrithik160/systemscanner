@@ -1,0 +1,13 @@
+{
+  "name": "frontend/dummy/src/HelloWorldLauncher.jsx",
+  "code": "import React, { useState } from 'react';\n\nconst HelloWorldLauncher = () => {\n  const [isVisible, setIsVisible] = useState(false);\n  const [message, setMessage] = useState('');\n\n  const handleShow = () => {\n    setIsVisible(true);\n    // Simulate fetching from the new endpoint\n    fetch('/helloworld')\n      .then(response => {\n        if (!response.ok) {\n          throw new Error('Network response was not ok');\n        }\n        return response.text(); // Assuming the endpoint returns text\n      })\n      .then(data => {\n        setMessage(data);\n        // Simple animation simulation by setting a timeout\n        setTimeout(() => {\n          setMessage('\u2728 Hello World! (Animated) \u2728');\n        }, 500);\n      })\n      .catch(error => {\n        console.error('Error fetching helloworld:', error);\n        setMessage('Error loading message from /helloworld endpoint.');\n      });\n  };\n\n  return (\n    <div>\n      {/* CRITICAL UNBREAKABLE CODE: Must render a launcher button if visibility is toggled */}\n      {!isVisible && (\n        <button onClick={handleShow} style={{ padding: '10px 20px', fontSize: '16px', cursor: 'pointer' }}>\n          \ud83d\ude80 Launch Animated Hello World Feature\n        </button>\n      )}\n\n      {/* Modal/Visible Content */}\n      {isVisible && (\n        <div style={{ border: '2px solid #4CAF50', padding: '20px', marginTop: '20px', backgroundColor: '#e8f5e9' }}>\n          <h3>Feature Loaded</h3>\n          <p style={{ fontSize: '24px', color: '#2e7d32' }}>{message}</p>\n          <button onClick={() => setIsVisible(false)} style={{ marginTop: '15px', padding: '8px 15px' }}>\n            Close Feature\n          </button>\n        </div>\n      )}\n    </div>\n  );\n};\n\nexport default HelloWorldLauncher;",
+  "lang": "jsx",
+  "is_crown_jewel": true,
+  "suggested_inputs": [
+    "frontend/dummy/src/App.jsx"
+  ],
+  "suggested_outputs": [
+    "backend/server.js"
+  ],
+  "explanation": "This component, HelloWorldLauncher.jsx, implements the required functionality. It uses local state (isVisible, message) to manage the UI. Crucially, it adheres to the VISIBLE UI RULE: the feature is only triggered via a prominent launch button when hidden. When clicked, it simulates an API call to the expected '/helloworld' endpoint (which must be implemented in backend/server.js). Upon successful fetch, it displays an animated/delayed message. It is designed to be imported into App.jsx for integration."
+}

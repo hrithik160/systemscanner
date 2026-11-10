@@ -1,0 +1,4 @@
+{
+  "healed_code": "def broken():\n    return 42",
+  "fix_summary": "The incorrect syntax in the function definition was corrected by replacing the colon with parentheses."
+}

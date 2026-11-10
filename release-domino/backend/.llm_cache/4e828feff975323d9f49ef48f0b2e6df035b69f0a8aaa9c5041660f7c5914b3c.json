@@ -1,0 +1,3 @@
+{
+  "summary": "This project utilizes a modern stack featuring Express for the backend and React with TypeScript for the frontend. Vite is employed as the build tool to facilitate fast development and bundling. Since no external infrastructure was detected, the application runs as a self-contained client-server setup."
+}

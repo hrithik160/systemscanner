@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Release Domino — Unified P1 (AI/LLM) + P2 (Docker/Tests/Git) Console</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --panel: #111827;
+      --panel-alt: #1f2937;
+      --border: #374151;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --purple: #8b5cf6;
+      --purple-hover: #7c3aed;
+      --green: #10b981;
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 12px;
+    }
+    .badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+      background: var(--panel-alt);
+      border: 1px solid var(--border);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .badge.ok { border-color: var(--green); color: #34d399; background: rgba(16, 185, 129, 0.1); }
+    .badge.warn { border-color: var(--amber); color: #fbbf24; background: rgba(245, 158, 11, 0.1); }
+    .badge.err { border-color: var(--red); color: #f87171; background: rgba(239, 68, 68, 0.1); }
+    .badge.ai { border-color: var(--purple); color: #c4b5fd; background: rgba(139, 92, 246, 0.15); }
+    main {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      flex: 1;
+      overflow: hidden;
+    }
+    .sidebar {
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      padding: 11px 8px;
+      font-weight: 600;
+      font-size: 12.5px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .tab-btn.active {
+      color: var(--text);
+      border-bottom-color: var(--accent);
+      background: rgba(59, 130, 246, 0.06);
+    }
+    .tab-content {
+      padding: 14px;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .tab-content.active { display: flex; }
+    .dropzone {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 18px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      background: rgba(255,255,255,0.01);
+    }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--accent);
+      background: rgba(59, 130, 246, 0.08);
+    }
+    .dropzone h4 { margin: 0 0 4px 0; font-size: 13.5px; }
+    .dropzone p { margin: 0; font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+    input[type="text"], textarea, select {
+      width: 100%;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 10px;
+      font-size: 12.5px;
+      font-family: inherit;
+    }
+    textarea {
+      font-family: var(--mono);
+      font-size: 12px;
+      resize: vertical;
+    }
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 7px 12px;
+      font-weight: 600;
+      font-size: 12.5px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    button:hover { background: var(--accent-hover); }
+    button.secondary {
+      background: var(--panel-alt);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    button.secondary:hover { background: #374151; }
+    button.green { background: var(--green); }
+    button.green:hover { background: #059669; }
+    button.purple { background: var(--purple); }
+    button.purple:hover { background: var(--purple-hover); }
+    .section-block {
+      padding: 12px 14px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .file-list {
+      max-height: 240px;
+      overflow-y: auto;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px;
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: #d1d5db;
+    }
+    .file-item {
+      padding: 4px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      word-break: break-all;
+    }
+    .file-item:hover {
+      background: rgba(59, 130, 246, 0.15);
+      color: #93c5fd;
+    }
+    .file-item.selected {
+      background: rgba(139, 92, 246, 0.22);
+      color: #ddd6fe;
+      font-weight: 600;
+    }
+    .workspace {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+    .mode-switcher {
+      background: #0f172a;
+      border-bottom: 1px solid var(--border);
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .mode-tabs {
+      display: flex;
+      gap: 8px;
+    }
+    .mode-tab {
+      background: var(--panel-alt);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .mode-tab.active-p2 {
+      background: rgba(59, 130, 246, 0.18);
+      border-color: var(--accent);
+      color: #93c5fd;
+    }
+    .mode-tab.active-p1 {
+      background: rgba(139, 92, 246, 0.22);
+      border-color: var(--purple);
+      color: #ddd6fe;
+    }
+    .view-pane {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+    .view-pane.active {
+      display: flex;
+    }
+    .toolbar {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 9px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .terminal-box {
+      flex: 1;
+      background: #070a12;
+      padding: 14px 18px;
+      overflow-y: auto;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .line-system { color: #60a5fa; font-weight: 600; }
+    .line-stdout { color: #e5e7eb; }
+    .line-stderr { color: #f87171; }
+    .terminal-input-bar {
+      background: var(--panel);
+      border-top: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .prompt-char {
+      font-family: var(--mono);
+      color: var(--green);
+      font-weight: 700;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    /* Person 1 AI Inspector Grid */
+    .p1-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      align-content: start;
+    }
+    @media (max-width: 1150px) {
+      .p1-container { grid-template-columns: 1fr; }
+    }
+    .p1-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .p1-card.full-width {
+      grid-column: 1 / -1;
+    }
+    .p1-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+    .p1-card-title {
+      font-weight: 700;
+      font-size: 13.5px;
+      color: #ddd6fe;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .endpoint-tag {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(139, 92, 246, 0.4);
+      color: #c4b5fd;
+    }
+    .p1-result {
+      background: #070a12;
+      border: 1px solid #1f2937;
+      border-radius: 6px;
+      padding: 11px;
+      font-size: 12.5px;
+      line-height: 1.5;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 4px 0;
+    }
+    .pill {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 600;
+      background: #1e293b;
+      border: 1px solid #475569;
+      color: #e2e8f0;
+    }
+    .pill.stack { border-color: #3b82f6; color: #93c5fd; background: rgba(59,130,246,0.12); }
+    .pill.infra { border-color: #10b981; color: #6ee7b7; background: rgba(16,185,129,0.12); }
+    .pill.risk { border-color: #ef4444; color: #fca5a5; background: rgba(239,68,68,0.12); }
+    .code-pre {
+      font-family: var(--mono);
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #34d399;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span>🐳🤖 Release Domino — Unified P1 (AI/LLM) + P2 (Docker/Tests/Git) Console</span>
+    </div>
+    <div class="status-bar">
+      <span id="p1LlmBadge" class="badge ai">🤖 P1 LLM: Checking...</span>
+      <span id="daemonBadge" class="badge">Checking Docker Daemon...</span>
+      <span id="pyImageBadge" class="badge">rd-runner-py: ...</span>
+      <span id="activeContainerBadge" class="badge">Active Containers: 0</span>
+      <label class="badge" style="cursor:pointer;">
+        <input type="checkbox" id="strictDockerToggle" checked />
+        Strict Docker-Only Mode
+      </label>
+      <label class="badge" style="cursor:pointer;" title="Keep container running for 15s on non-web commands">
+        <input type="checkbox" id="keepAliveToggle" checked />
+        Hold 15s in Docker Desktop
+      </label>
+      <label class="badge" style="cursor:pointer;">
+        <input type="checkbox" id="allowNetworkToggle" checked />
+        Allow Internet (--network bridge)
+      </label>
+      <button class="secondary" onclick="cleanupAllContainers()" style="padding:4px 10px; font-size:12px;">🧹 Clean Containers</button>
+      <button class="secondary" id="buildImagesBtn" onclick="buildDockerImages()" style="padding:4px 10px; font-size:12px;">🔨 Build Docker Images</button>
+    </div>
+  </header>
+
+  <main>
+    <aside class="sidebar">
+      <div class="tabs">
+        <button class="tab-btn active" id="tabBtnFolder" onclick="switchTab('folder')">📁 Drop Folder</button>
+        <button class="tab-btn" id="tabBtnGithub" onclick="switchTab('github')">🐙 Clone GitHub</button>
+      </div>
+
+      <div class="tab-content active" id="tabFolder">
+        <div class="dropzone" id="folderDropzone" onclick="document.getElementById('folderInput').click()">
+          <h4>📥 Drag & Drop Project Folder</h4>
+          <p>Or click to browse. Files are copied into an isolated sandbox (host files are never modified).</p>
+        </div>
+        <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none" onchange="handleFolderPicker(this.files)" />
+      </div>
+
+      <div class="tab-content" id="tabGithub">
+        <label style="font-size:12px; color:var(--muted);">Public GitHub Repository URL</label>
+        <input type="text" id="githubUrlInput" placeholder="https://github.com/owner/repo" />
+        <label style="font-size:12px; color:var(--muted);">Branch (optional)</label>
+        <input type="text" id="githubBranchInput" placeholder="main" />
+        <button id="cloneBtn" onclick="cloneGithubRepo()">⬇️ Clone into Sandbox</button>
+      </div>
+
+      <div class="section-block">
+        <div class="section-title">Active Sandbox Project</div>
+        <select id="projectSelect" onchange="selectProject(this.value)"></select>
+      </div>
+
+      <div class="section-block" style="flex:1;">
+        <div class="section-title" style="display:flex; justify-content:space-between;">
+          <span>Files in Sandbox (<span id="fileCountLabel">0</span>)</span>
+          <span style="color:#c4b5fd; font-size:10px;">Click file to inspect in P1 AI</span>
+        </div>
+        <div class="file-list" id="fileListBox"></div>
+      </div>
+    </aside>
+
+    <section class="workspace">
+      <div class="mode-switcher">
+        <div class="mode-tabs">
+          <button id="modeBtnP2" class="mode-tab active-p2" onclick="switchWorkspaceMode('p2')">
+            🐳 Person 2 — Docker Container Sandbox, Tests & Git Ops
+          </button>
+          <button id="modeBtnP1" class="mode-tab" onclick="switchWorkspaceMode('p1')">
+            🤖 Person 1 — AI & Local LLM Inspector (Tasks L1–L8)
+          </button>
+        </div>
+        <div style="font-size:12px; color:var(--muted);">
+          Active Project: <strong id="activePidBanner" style="color:#60a5fa;">demo</strong> |
+          Selected Node: <strong id="activeNodeBanner" style="color:#c4b5fd;">app/auth.py</strong>
+        </div>
+      </div>
+
+      <!-- ==================== PERSON 2 VIEW PANE ==================== -->
+      <div id="paneP2" class="view-pane active">
+        <div class="toolbar">
+          <div class="toolbar-group">
+            <button class="green" onclick="sendTermCmd('run')">▶ Run Project in Docker</button>
+            <button id="stopContainerBtn" onclick="stopRunningContainer()" style="background:#dc2626;">⏹ Stop Container</button>
+            <a id="actionBarLiveBtn" href="http://127.0.0.1:5050" target="_blank" style="display:none; background:#10b981; color:#042f2e; font-weight:800; font-size:13px; padding:7px 14px; border-radius:6px; text-decoration:none; border:2px solid #34d399;">🌐 Open Live Site (127.0.0.1:5050) ↗</a>
+            <button onclick="sendTermCmd('test')">🧪 Run Pytest + Coverage in Docker</button>
+            <button class="secondary" onclick="sendTermCmd('install')">📦 Install Deps (Phase 1)</button>
+            <button class="secondary" onclick="verifyContainerIsolation()">🛡️ Verify Linux Container</button>
+            <button class="purple" onclick="switchWorkspaceMode('p1')">🤖 Open P1 AI Inspector</button>
+          </div>
+          <div class="toolbar-group">
+            <button class="secondary" onclick="checkGitDiff()">📊 Git Diff</button>
+            <button class="secondary" onclick="checkMergeConflicts()">⚡ Merge Conflict Radar</button>
+            <button class="secondary" onclick="clearTerminal()">🧹 Clear</button>
+          </div>
+        </div>
+
+        <div id="livePreviewBanner" style="display:none; background: rgba(16, 185, 129, 0.15); border-bottom: 1px solid #10b981; padding: 10px 18px; align-items: center; justify-content: space-between; gap: 12px;">
+          <div style="display:flex; align-items:center; gap:10px; font-size:13.5px;">
+            <span style="font-size:16px;">🟢</span>
+            <span>Project is running inside Docker at <a id="livePreviewLink" href="http://127.0.0.1:5050" target="_blank" style="color:#34d399; font-weight:700; font-family:var(--mono); text-decoration:underline;">http://127.0.0.1:5050</a></span>
+          </div>
+          <a id="livePreviewBtn" href="http://127.0.0.1:5050" target="_blank" style="background:#10b981; color:#06281e; font-weight:700; font-size:13px; padding:6px 14px; border-radius:6px; text-decoration:none;">↗ Click to Open Running Project</a>
+        </div>
+
+        <div class="terminal-box" id="terminalOutput"></div>
+
+        <div class="terminal-input-bar">
+          <span class="prompt-char">docker@sandbox:/workspace$</span>
+          <input type="text" id="cmdInput" placeholder="Type a command to run inside Docker (e.g. pytest -v, python app.py, ls, cat auth.py, id, uname -a) and press Enter..." onkeydown="if(event.key==='Enter') sendCustomCmd()" />
+          <button onclick="sendCustomCmd()">Send</button>
+        </div>
+      </div>
+
+      <!-- ==================== PERSON 1 AI & LLM INSPECTOR PANE ==================== -->
+      <div id="paneP1" class="view-pane">
+        <div class="toolbar">
+          <div class="toolbar-group">
+            <span style="font-size:12.5px; color:#c4b5fd; font-weight:700;">🤖 Person 1 Quick Actions:</span>
+            <button class="purple" onclick="runP1Summarize()">✨ 1. Summarize Node (L3)</button>
+            <button class="purple" onclick="runP1Architecture()">🏗️ 2. Detect Architecture (L7)</button>
+            <button class="purple" onclick="runP1GenerateTests()">🧪 3. Generate Tests (L4)</button>
+            <button class="purple" onclick="runP1ProposeConnect()">🔌 4. Propose Connection (L5)</button>
+            <button class="purple" onclick="runP1AgentChat()">🚀 5. Run 6-Step Agent (L6)</button>
+            <button class="secondary" onclick="runP1AntiPatterns()">🔍 6. Scan Anti-Patterns (L8)</button>
+          </div>
+          <div class="toolbar-group">
+            <button class="green" onclick="runAllP1Checks()">⚡ Run All P1 Smoke Checks</button>
+          </div>
+        </div>
+
+        <div class="p1-container">
+          <!-- Card 1: Active Node & Source Code Inspector -->
+          <div class="p1-card">
+            <div class="p1-card-header">
+              <span class="p1-card-title">📄 Active Node Source Code</span>
+              <span class="endpoint-tag">GET /api/node/{pid}/{nid}/code</span>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <select id="p1NodeSelect" onchange="loadSelectedNodeCode(this.value)"></select>
+              <button class="secondary" onclick="loadSelectedNodeCode(document.getElementById('p1NodeSelect').value)" style="white-space:nowrap;">🔄 Reload File</button>
+            </div>
+            <textarea id="p1NodeCodeBox" rows="8" placeholder="Select a file from the dropdown or sidebar, or paste custom code here..."></textarea>
+          </div>
+
+          <!-- Card 2: Task L3 Node Summarizer -->
+          <div class="p1-card">
+            <div class="p1-card-header">
+              <span class="p1-card-title">✨ Task L3 — Node Summarizer</span>
+              <span class="endpoint-tag">POST /api/node/{pid}/{nid}/summarize</span>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button class="purple" onclick="runP1Summarize()">✨ Summarize Selected Node</button>
+              <span id="p1SumStatus" style="font-size:12px; color:var(--muted);"></span>
+            </div>
+            <div class="p1-result" id="p1SummarizeResult">
+              Click <strong>Summarize Selected Node</strong> to generate a 3-bullet summary, purpose, exports, and security/bug risks.
+            </div>
+          </div>
+
+          <!-- Card 3: Task L7 Architecture Detector & Task L8 Anti-Patterns -->
+          <div class="p1-card">
+            <div class="p1-card-header">
+              <span class="p1-card-title">🏗️ Task L7 — Architecture & Stack Detector</span>
+              <span class="endpoint-tag">GET /api/architecture/{pid}</span>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="purple" onclick="runP1Architecture()">🏗️ Detect Project Architecture</button>
+              <button class="secondary" onclick="runP1AntiPatterns()">🔍 Scan Node Anti-Patterns (L8)</button>
+            </div>
+            <div class="p1-result" id="p1ArchResult">
+              Click <strong>Detect Project Architecture</strong> to scan <code>requirements.txt</code>, <code>package.json</code>, <code>.env</code>, and module imports for stack & backing infrastructure.
+            </div>
+          </div>
+
+          <!-- Card 4: Task L4 AI Test Generator + P2 Docker Validation -->
+          <div class="p1-card">
+            <div class="p1-card-header">
+              <span class="p1-card-title">🧪 Task L4 — AI Unit Test Generator + P2 Runner</span>
+              <span class="endpoint-tag">POST /api/tests/generate</span>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <select id="p1TestFramework" style="width:120px;">
+                <option value="pytest">pytest (Python)</option>
+                <option value="jest">jest (JS/TS)</option>
+              </select>
+              <button class="purple" onclick="runP1GenerateTests()">🧪 Generate Unit Tests</button>
+              <button class="green" id="p1RunGenTestBtn" onclick="runGeneratedTestInDocker()" style="display:none;">🐳 Run Generated Test in P2 Docker</button>
+              <button class="secondary" onclick="runP1AutoHeal()">🩹 Auto-Heal Trace (L8)</button>
+            </div>
+            <div class="p1-result" id="p1TestGenResult">
+              Click <strong>Generate Unit Tests</strong> to synthesize runnable unit tests and validate them against Person 2's test runner.
+            </div>
+          </div>
+
+          <!-- Card 5: Task L5 Sandbox Node Connection & Conflict Resolution -->
+          <div class="p1-card">
+            <div class="p1-card-header">
+              <span class="p1-card-title">🔌 Task L5 — Sandbox Endpoint Wiring & Apply</span>
+              <span class="endpoint-tag">POST /api/sandbox/connect</span>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+              <div>
+                <label style="font-size:11px; color:var(--muted);">Source Node</label>
+                <select id="p1SourceNodeSelect"></select>
+              </div>
+              <div>
+                <label style="font-size:11px; color:var(--muted);">Target Node</label>
+                <select id="p1TargetNodeSelect"></select>
+              </div>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="purple" onclick="runP1ProposeConnect()">🔌 Propose Connection Patch</button>
+              <button class="green" id="p1ApplyProposalBtn" onclick="runP1ApplyProposal()" style="display:none;">✅ Apply Proposal (/api/sandbox/apply)</button>
+              <button class="secondary" onclick="runP1ResolveConflict()">⚡ AI Resolve Conflict (L8)</button>
+            </div>
+            <div class="p1-result" id="p1ConnectResult">
+              Pick a Source Node and Target Node and click <strong>Propose Connection Patch</strong> to generate a syntax-checked unified diff.
+            </div>
+          </div>
+
+          <!-- Card 6: Task L6 Multi-Step AI Coding Agent Loop -->
+          <div class="p1-card">
+            <div class="p1-card-header">
+              <span class="p1-card-title">🚀 Task L6 — Multi-Step AI Coding Agent (6-Step Loop)</span>
+              <span class="endpoint-tag">POST /api/agent/chat</span>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <input type="text" id="p1AgentPrompt" value="Add a Redis rate limiter to auth.py and verify tests" placeholder="Describe coding goal for the 6-step agent..." />
+              <button class="purple" onclick="runP1AgentChat()" style="white-space:nowrap;">🚀 Run Agent</button>
+            </div>
+            <div class="p1-result" id="p1AgentResult">
+              Enter a coding prompt and click <strong>Run Agent</strong> to execute the multi-step agent loop (<code>read_node</code>, <code>get_dependents</code>, <code>write_patch</code>, <code>run_tests</code>, <code>done</code>).
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    let currentPid = 'demo';
+    let currentNid = 'app/auth.py';
+    let lastGeneratedTestCode = '';
+    let lastProposalId = '';
+    let termWs = null;
+
+    function escapeHtml(s) {
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function switchWorkspaceMode(mode) {
+      const p2Pane = document.getElementById('paneP2');
+      const p1Pane = document.getElementById('paneP1');
+      const btnP2 = document.getElementById('modeBtnP2');
+      const btnP1 = document.getElementById('modeBtnP1');
+      if (mode === 'p1') {
+        p2Pane.classList.remove('active');
+        p1Pane.classList.add('active');
+        btnP2.className = 'mode-tab';
+        btnP1.className = 'mode-tab active-p1';
+      } else {
+        p1Pane.classList.remove('active');
+        p2Pane.classList.add('active');
+        btnP1.className = 'mode-tab';
+        btnP2.className = 'mode-tab active-p2';
+      }
+    }
+
+    function showLivePreview(url) {
+      const banner = document.getElementById('livePreviewBanner');
+      const link = document.getElementById('livePreviewLink');
+      const btn = document.getElementById('livePreviewBtn');
+      const actionBtn = document.getElementById('actionBarLiveBtn');
+      if (banner && link && btn) {
+        link.href = url;
+        link.textContent = url;
+        btn.href = url;
+        banner.style.display = 'flex';
+      }
+      if (actionBtn) {
+        actionBtn.href = url;
+        actionBtn.textContent = `🌐 Open Site (${url})`;
+        actionBtn.style.display = 'inline-flex';
+      }
+    }
+
+    function hideLivePreview() {
+      const banner = document.getElementById('livePreviewBanner');
+      if (banner) banner.style.display = 'none';
+      const actionBtn = document.getElementById('actionBarLiveBtn');
+      if (actionBtn) actionBtn.style.display = 'none';
+    }
+
+    function appendTerm(stream, text) {
+      const box = document.getElementById('terminalOutput');
+      const clean = text.replace(/\r?\n$/, '');
+
+      const mPreview = clean.match(/\[LIVE_PREVIEW_URL\]\s+(https?:\/\/[^\s]+)/);
+      if (mPreview) {
+        showLivePreview(mPreview[1]);
+      }
+      if (clean.includes('[Process exited') || clean.includes('[Docker Container Stopped]')) {
+        hideLivePreview();
+      }
+
+      const span = document.createElement('div');
+      span.className = 'line-' + (stream || 'stdout');
+
+      const urlRegex = /(https?:\/\/127\.0\.0\.1:\d+[^\s]*)/g;
+      if (urlRegex.test(clean)) {
+        const escaped = escapeHtml(clean);
+        span.innerHTML = escaped.replace(
+          urlRegex,
+          '<a href="$1" target="_blank" style="color:#34d399; font-weight:700; text-decoration:underline;">$1 ↗ (Click to Open)</a>'
+        );
+      } else {
+        span.textContent = clean;
+      }
+
+      box.appendChild(span);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function clearTerminal() {
+      document.getElementById('terminalOutput').innerHTML = '';
+    }
+
+    function switchTab(tab) {
+      document.getElementById('tabBtnFolder').classList.toggle('active', tab === 'folder');
+      document.getElementById('tabBtnGithub').classList.toggle('active', tab === 'github');
+      document.getElementById('tabFolder').classList.toggle('active', tab === 'folder');
+      document.getElementById('tabGithub').classList.toggle('active', tab === 'github');
+    }
+
+    async function refreshLlmStatus() {
+      try {
+        const res = await fetch('/api/llm/status');
+        const data = await res.json();
+        const badge = document.getElementById('p1LlmBadge');
+        if (data.ollama_online) {
+          badge.className = 'badge ok';
+          badge.textContent = `🤖 P1 Ollama: Online (${data.configured_model})`;
+        } else {
+          badge.className = 'badge ai';
+          badge.textContent = `🤖 P1 LLM: Ready (Fallback + Cache Mode)`;
+        }
+      } catch (e) {}
+    }
+
+    async function refreshDockerStatus() {
+      try {
+        const res = await fetch('/api/docker/status');
+        const data = await res.json();
+        const dBadge = document.getElementById('daemonBadge');
+        const pyBadge = document.getElementById('pyImageBadge');
+        const cBadge = document.getElementById('activeContainerBadge');
+
+        if (data.daemon_running) {
+          dBadge.className = 'badge ok';
+          dBadge.textContent = '● Docker Daemon: Running';
+        } else {
+          dBadge.className = 'badge err';
+          dBadge.textContent = '✖ Docker Daemon: Stopped';
+        }
+
+        const pyBuilt = data.images && data.images['rd-runner-py'];
+        pyBadge.className = pyBuilt ? 'badge ok' : 'badge warn';
+        pyBadge.textContent = pyBuilt ? 'rd-runner-py: Ready' : 'rd-runner-py: Auto-builds on Run';
+
+        const active = data.running_containers || [];
+        cBadge.className = active.length > 0 ? 'badge ok' : 'badge';
+        cBadge.textContent = active.length > 0
+          ? `🟢 Active Container: ${active.map(c => c.name).join(', ')}`
+          : 'Active rd-* Containers: 0';
+      } catch (e) {}
+    }
+
+    async function buildDockerImages() {
+      const btn = document.getElementById('buildImagesBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Building Images...';
+      appendTerm('system', '[Docker] Building rd-runner-py and rd-runner-node images...');
+      try {
+        const res = await fetch('/api/docker/build-images', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({langs: ['py', 'node']})
+        });
+        const data = await res.json();
+        for (const [lang, info] of Object.entries(data.results || {})) {
+          appendTerm(info.success ? 'system' : 'stderr', `[Docker Build ${lang}] success=${info.success}\n${info.log}`);
+        }
+        await refreshDockerStatus();
+      } catch (e) {
+        appendTerm('stderr', '[Docker Build Error] ' + e);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔨 Build Docker Images';
+      }
+    }
+
+    async function loadProjects(selectPid) {
+      const res = await fetch('/api/sandbox/projects');
+      const data = await res.json();
+      const sel = document.getElementById('projectSelect');
+      sel.innerHTML = '';
+      const projects = data.projects || [];
+      for (const p of projects) {
+        const opt = document.createElement('option');
+        opt.value = p.pid;
+        opt.textContent = `${p.pid} [${p.stack || "App"}] (${p.file_count} files)`;
+        sel.appendChild(opt);
+      }
+      const target = selectPid || currentPid || (projects[0] && projects[0].pid);
+      if (target) {
+        sel.value = target;
+        const projObj = projects.find(x => x.pid === target);
+        document.getElementById('activePidBanner').textContent = target;
+        updateFileList(projObj);
+        if (target !== currentPid || !termWs) {
+          connectTerminal(target);
+        }
+      }
+    }
+
+    function updateFileList(proj) {
+      const box = document.getElementById('fileListBox');
+      const countLbl = document.getElementById('fileCountLabel');
+      const nodeSel = document.getElementById('p1NodeSelect');
+      const srcSel = document.getElementById('p1SourceNodeSelect');
+      const tgtSel = document.getElementById('p1TargetNodeSelect');
+
+      if (!proj) {
+        box.innerHTML = '';
+        countLbl.textContent = '0';
+        return;
+      }
+      const files = proj.files || [];
+      countLbl.textContent = proj.file_count;
+      box.innerHTML = files.map(f =>
+        `<div class="file-item ${f === currentNid ? 'selected' : ''}" onclick="selectNodeFile('${f.replace(/'/g, "\\'")}')">
+          <span>📄 ${escapeHtml(f)}</span>
+        </div>`
+      ).join('');
+
+      const codeFiles = files.filter(f => /\.(py|js|jsx|ts|tsx|html|css|json)$/i.test(f));
+      const listForDropdown = codeFiles.length ? codeFiles : files;
+
+      nodeSel.innerHTML = listForDropdown.map(f => `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`).join('');
+      srcSel.innerHTML = listForDropdown.map(f => `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`).join('');
+      tgtSel.innerHTML = listForDropdown.map(f => `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`).join('');
+
+      const defaultNode = listForDropdown.find(f => f.includes('auth.py') || f.includes('main.py') || f.includes('app.py') || f.includes('App.jsx')) || listForDropdown[0] || 'auth.py';
+      const secondNode = listForDropdown.find(f => f.includes('redis') || f.includes('db') || f !== defaultNode) || defaultNode;
+
+      nodeSel.value = defaultNode;
+      srcSel.value = secondNode;
+      tgtSel.value = defaultNode;
+      loadSelectedNodeCode(defaultNode);
+    }
+
+    async function selectNodeFile(nid) {
+      currentNid = nid;
+      document.getElementById('activeNodeBanner').textContent = nid;
+      const nodeSel = document.getElementById('p1NodeSelect');
+      if (nodeSel) nodeSel.value = nid;
+      document.querySelectorAll('.file-item').forEach(el => {
+        el.classList.toggle('selected', el.textContent.trim().endsWith(nid));
+      });
+      await loadSelectedNodeCode(nid);
+    }
+
+    async function loadSelectedNodeCode(nid) {
+      if (!nid) return;
+      currentNid = nid;
+      document.getElementById('activeNodeBanner').textContent = nid;
+      try {
+        const res = await fetch(`/api/node/${encodeURIComponent(currentPid)}/${nid}/code`);
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('p1NodeCodeBox').value = data.code || '';
+        }
+      } catch (e) {}
+    }
+
+    async function selectProject(pid) {
+      currentPid = pid;
+      document.getElementById('activePidBanner').textContent = pid;
+      const res = await fetch('/api/sandbox/projects');
+      const data = await res.json();
+      const proj = (data.projects || []).find(x => x.pid === pid);
+      updateFileList(proj);
+      connectTerminal(pid);
+    }
+
+    function connectTerminal(pid) {
+      currentPid = pid;
+      if (termWs) {
+        try { termWs.close(); } catch (e) {}
+      }
+      const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      termWs = new WebSocket(`${proto}//${location.host}/ws/terminal/${pid}`);
+      termWs.onmessage = (ev) => {
+        try {
+          const msg = JSON.parse(ev.data);
+          appendTerm(msg.stream, msg.data);
+          refreshDockerStatus();
+        } catch (e) {
+          appendTerm('stdout', ev.data);
+        }
+      };
+      termWs.onerror = () => appendTerm('stderr', `[WebSocket Error] Disconnected from /ws/terminal/${pid}`);
+    }
+
+    function sendTermCmd(cmd) {
+      if (cmd === "run") {
+        hideLivePreview();
+      }
+      if (!termWs || termWs.readyState !== WebSocket.OPEN) {
+        appendTerm('stderr', 'Terminal WebSocket not connected; reconnecting...');
+        connectTerminal(currentPid);
+        return;
+      }
+      const strictDocker = document.getElementById('strictDockerToggle').checked;
+      const keepAliveSec = document.getElementById('keepAliveToggle').checked ? 15 : 0;
+      const allowNet = document.getElementById('allowNetworkToggle') ? document.getElementById('allowNetworkToggle').checked : false;
+      termWs.send(JSON.stringify({
+        cmd: cmd,
+        strict_docker: strictDocker,
+        keep_alive_sec: keepAliveSec,
+        allow_network: allowNet
+      }));
+      setTimeout(refreshDockerStatus, 800);
+    }
+
+    function sendCustomCmd() {
+      const inp = document.getElementById('cmdInput');
+      const val = inp.value.trim();
+      if (!val) return;
+      sendTermCmd(val);
+      inp.value = '';
+    }
+
+    async function cleanupAllContainers() {
+      appendTerm("system", "[Docker] Cleaning up all lingering rd-* containers...");
+      try {
+        const res = await fetch("/api/docker/cleanup-containers", { method: "POST" });
+        const data = await res.json();
+        appendTerm("system", `[Docker Cleanup] Removed ${data.cleaned_count} lingering containers.`);
+        hideLivePreview();
+        await refreshDockerStatus();
+      } catch (e) {
+        appendTerm("stderr", "[Docker Cleanup Error] " + e);
+      }
+    }
+
+    async function stopRunningContainer() {
+      appendTerm("system", `[Docker Stop] Stopping active container for project ${currentPid}...`);
+      try {
+        await fetch(`/api/project/${currentPid}/stop`, { method: "POST" });
+      } catch (e) {}
+      if (termWs && termWs.readyState === WebSocket.OPEN) {
+        termWs.send(JSON.stringify({ cmd: "stop" }));
+      }
+      setTimeout(refreshDockerStatus, 600);
+    }
+
+    function verifyContainerIsolation() {
+      sendTermCmd('python -c "import os, platform; print(\'=== CONTAINER PROOF ===\'); print(\'OS:\', platform.platform()); print(\'UID:\', getattr(os, \'getuid\', lambda: \'windows-host\')()); print(\'CWD:\', os.getcwd()); print(\'Files:\', sorted(os.listdir(\'.\'))[:10])"');
+    }
+
+    async function checkGitDiff() {
+      appendTerm('system', `$ GET /api/diff/${currentPid}`);
+      const res = await fetch(`/api/diff/${currentPid}`);
+      const data = await res.json();
+      appendTerm('stdout', JSON.stringify(data, null, 2));
+    }
+
+    async function checkMergeConflicts() {
+      appendTerm('system', `$ GET /api/merge-check/${currentPid}`);
+      const res = await fetch(`/api/merge-check/${currentPid}`);
+      const data = await res.json();
+      appendTerm('stdout', JSON.stringify(data, null, 2));
+    }
+
+    /* ==================== PERSON 1 AI & LLM HANDLERS ==================== */
+    async function runP1Summarize() {
+      const nid = document.getElementById('p1NodeSelect').value || currentNid || 'auth.py';
+      const code = document.getElementById('p1NodeCodeBox').value;
+      const box = document.getElementById('p1SummarizeResult');
+      const status = document.getElementById('p1SumStatus');
+      status.textContent = '⏳ Analyzing node via Person 1 LLM...';
+      box.innerHTML = 'Running <code>POST /api/node/' + escapeHtml(currentPid) + '/' + escapeHtml(nid) + '/summarize</code>...';
+      try {
+        const res = await fetch(`/api/node/${encodeURIComponent(currentPid)}/${nid}/summarize`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ code: code || null, path: nid })
+        });
+        const data = await res.json();
+        status.textContent = res.ok ? '✅ Summary Ready' : '❌ Error ' + res.status;
+        if (!res.ok) {
+          box.innerHTML = `<pre class="code-pre" style="color:#f87171;">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+          return;
+        }
+        const bullets = (data.summary || []).map(b => `<li>${escapeHtml(b)}</li>`).join('');
+        const exportsPills = (data.exports || []).map(e => `<span class="pill stack">${escapeHtml(e)}</span>`).join('') || '<span style="color:var(--muted)">None</span>';
+        const risksPills = (data.risks || []).map(r => `<span class="pill risk">⚠️ ${escapeHtml(r)}</span>`).join('') || '<span style="color:var(--muted)">None</span>';
+        box.innerHTML = `
+          <div style="margin-bottom:8px;"><strong>Purpose:</strong> ${escapeHtml(data.purpose)}</div>
+          <div style="margin-bottom:8px;"><strong>3-Bullet Summary:</strong><ul style="margin:4px 0; padding-left:18px;">${bullets}</ul></div>
+          <div style="margin-bottom:6px;"><strong>Exports:</strong><div class="pill-row">${exportsPills}</div></div>
+          <div><strong>Risks:</strong><div class="pill-row">${risksPills}</div></div>
+        `;
+      } catch (e) {
+        status.textContent = '❌ Failed';
+        box.textContent = 'Error: ' + e;
+      }
+    }
+
+    async function runP1Architecture() {
+      const box = document.getElementById('p1ArchResult');
+      box.innerHTML = `Running <code>GET /api/architecture/${escapeHtml(currentPid)}</code>...`;
+      try {
+        const res = await fetch(`/api/architecture/${encodeURIComponent(currentPid)}`);
+        const data = await res.json();
+        if (!res.ok) {
+          box.innerHTML = `<pre class="code-pre" style="color:#f87171;">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+          return;
+        }
+        const stackPills = (data.stack || []).map(s => `<span class="pill stack">${escapeHtml(s)}</span>`).join('') || '<span class="pill">None</span>';
+        const infraPills = (data.infra || []).map(i => `<span class="pill infra">${escapeHtml(i)}</span>`).join('') || '<span class="pill">Local In-Memory</span>';
+        const linksHtml = (data.node_infra_links || []).map(l =>
+          `<li><code>${escapeHtml(l.node_id)}</code> ➔ <strong>${escapeHtml(l.infra)}</strong> <span style="color:var(--muted)">(${escapeHtml(l.reason)})</span></li>`
+        ).join('') || '<li>No direct infra imports detected</li>';
+        box.innerHTML = `
+          <div style="margin-bottom:8px;"><strong>3-Sentence Architecture Summary:</strong><br/>${escapeHtml(data.summary)}</div>
+          <div style="margin-bottom:6px;"><strong>Detected Tech Stack:</strong><div class="pill-row">${stackPills}</div></div>
+          <div style="margin-bottom:6px;"><strong>Backing Infrastructure:</strong><div class="pill-row">${infraPills}</div></div>
+          <div><strong>Node-to-Infra Links (${(data.node_infra_links || []).length}):</strong><ul style="margin:4px 0; padding-left:18px;">${linksHtml}</ul></div>
+        `;
+      } catch (e) {
+        box.textContent = 'Error: ' + e;
+      }
+    }
+
+    async function runP1AntiPatterns() {
+      const nid = document.getElementById('p1NodeSelect').value || currentNid || 'auth.py';
+      const code = document.getElementById('p1NodeCodeBox').value;
+      const box = document.getElementById('p1ArchResult');
+      box.innerHTML = `Scanning <code>${escapeHtml(nid)}</code> via <code>POST /api/stretch/antipatterns</code>...`;
+      try {
+        const res = await fetch('/api/stretch/antipatterns', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ pid: currentPid, nid: nid, code: code || null, path: nid })
+        });
+        const data = await res.json();
+        const warnings = (data.warnings || []).map(w =>
+          `<div style="border-left:3px solid #f59e0b; padding-left:8px; margin-bottom:8px;">
+            <strong>[${escapeHtml(w.severity.toUpperCase())}] ${escapeHtml(w.warning_type)}</strong><br/>
+            <span style="color:#d1d5db;">${escapeHtml(w.recommendation)}</span>
+          </div>`
+        ).join('') || '<div>✅ No architectural anti-patterns detected.</div>';
+        box.innerHTML = `<div style="margin-bottom:6px; color:#fbbf24; font-weight:700;">🔍 Task L8 Anti-Pattern Scan (${escapeHtml(nid)}):</div>${warnings}`;
+      } catch (e) {
+        box.textContent = 'Error: ' + e;
+      }
+    }
+
+    async function runP1GenerateTests() {
+      const nid = document.getElementById('p1NodeSelect').value || currentNid || 'auth.py';
+      const code = document.getElementById('p1NodeCodeBox').value;
+      const fw = document.getElementById('p1TestFramework').value;
+      const box = document.getElementById('p1TestGenResult');
+      const runBtn = document.getElementById('p1RunGenTestBtn');
+      box.innerHTML = `Generating ${escapeHtml(fw)} tests for <code>${escapeHtml(nid)}</code> and validating with Person 2's runner...`;
+      try {
+        const res = await fetch('/api/tests/generate', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ pid: currentPid, nid: nid, code: code || null, framework: fw })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          box.innerHTML = `<pre class="code-pre" style="color:#f87171;">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+          return;
+        }
+        lastGeneratedTestCode = data.test_code || '';
+        runBtn.style.display = 'inline-block';
+        box.innerHTML = `
+          <div style="margin-bottom:6px; color:#93c5fd;"><strong>Framework:</strong> <code>${escapeHtml(data.framework)}</code> (Validated via P1➔P2 Runner Pipeline)</div>
+          <pre class="code-pre">${escapeHtml(data.test_code)}</pre>
+        `;
+      } catch (e) {
+        box.textContent = 'Error: ' + e;
+      }
+    }
+
+    async function runGeneratedTestInDocker() {
+      if (!lastGeneratedTestCode) return;
+      const nid = document.getElementById('p1NodeSelect').value || currentNid || 'auth.py';
+      const box = document.getElementById('p1TestGenResult');
+      box.innerHTML += `\n<div style="margin-top:8px; color:#60a5fa;">🐳 Executing generated test inside Person 2 Docker container (<code>POST /api/tests/run</code>)...</div>`;
+      try {
+        const res = await fetch('/api/tests/run', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            pid: currentPid,
+            node_ids: [nid],
+            test_code: lastGeneratedTestCode,
+            wait: true
+          })
+        });
+        const data = await res.json();
+        box.innerHTML = `
+          <div style="margin-bottom:8px; padding:8px; background:rgba(16,185,129,0.12); border:1px solid #10b981; border-radius:6px;">
+            <strong>🐳 P2 Docker Test Run (${escapeHtml(data.run_id)}):</strong>
+            Passed: <strong style="color:#34d399;">${data.passed}</strong> |
+            Failed: <strong style="color:#f87171;">${data.failed}</strong> |
+            Errors: <strong>${data.errors}</strong> |
+            Duration: <code>${data.duration_s}s</code>
+          </div>
+          <pre class="code-pre">${escapeHtml(lastGeneratedTestCode)}</pre>
+        `;
+      } catch (e) {
+        box.innerHTML += `<div style="color:#f87171;">Error: ${escapeHtml(e)}</div>`;
+      }
+    }
+
+    async function runP1AutoHeal() {
+      const nid = document.getElementById('p1NodeSelect').value || currentNid || 'auth.py';
+      const code = document.getElementById('p1NodeCodeBox').value;
+      const box = document.getElementById('p1TestGenResult');
+      box.innerHTML = `Running <code>POST /api/stretch/auto-heal</code> for <code>${escapeHtml(nid)}</code>...`;
+      try {
+        const res = await fetch('/api/stretch/auto-heal', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            pid: currentPid,
+            nid: nid,
+            stack_trace: "AssertionError: Expected rate-limited status 429 on repeated login attempts",
+            test_code: lastGeneratedTestCode || "def test_auth_rate_limit(): assert login() == 429",
+            source_code: code || ""
+          })
+        });
+        const data = await res.json();
+        box.innerHTML = `
+          <div style="margin-bottom:6px;"><strong>🩹 Auto-Heal Explanation:</strong> ${escapeHtml(data.explanation)}</div>
+          <pre class="code-pre">${escapeHtml(data.patch)}</pre>
+        `;
+      } catch (e) {
+        box.textContent = 'Error: ' + e;
+      }
+    }
+
+    async function runP1ProposeConnect() {
+      const srcNid = document.getElementById('p1SourceNodeSelect').value || 'redis_cache.py';
+      const tgtNid = document.getElementById('p1TargetNodeSelect').value || 'auth.py';
+      const box = document.getElementById('p1ConnectResult');
+      const applyBtn = document.getElementById('p1ApplyProposalBtn');
+      box.innerHTML = `Proposing connection from <code>${escapeHtml(srcNid)}</code> ➔ <code>${escapeHtml(tgtNid)}</code>...`;
+      try {
+        const res = await fetch('/api/sandbox/connect', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            pid: currentPid,
+            source_node_id: srcNid,
+            target_node_id: tgtNid
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          box.innerHTML = `<pre class="code-pre" style="color:#f87171;">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+          return;
+        }
+        lastProposalId = data.proposal_id;
+        applyBtn.style.display = 'inline-block';
+        box.innerHTML = `
+          <div style="margin-bottom:4px;"><strong>Proposal ID:</strong> <code>${escapeHtml(data.proposal_id)}</code> | <strong>Endpoint/Import:</strong> <code>${escapeHtml(data.endpoint)}</code></div>
+          <div style="margin-bottom:8px;"><strong>Rationale:</strong> ${escapeHtml(data.rationale)}</div>
+          <pre class="code-pre">${escapeHtml(data.patch)}</pre>
+        `;
+      } catch (e) {
+        box.textContent = 'Error: ' + e;
+      }
+    }
+
+    async function runP1ApplyProposal() {
+      if (!lastProposalId) return;
+      const box = document.getElementById('p1ConnectResult');
+      const applyBtn = document.getElementById('p1ApplyProposalBtn');
+      try {
+        const res = await fetch('/api/sandbox/apply', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ pid: currentPid, proposal_id: lastProposalId })
+        });
+        const data = await res.json();
+        applyBtn.style.display = 'none';
+        box.innerHTML = `<div style="padding:8px; background:rgba(16,185,129,0.15); border:1px solid #10b981; border-radius:6px; margin-bottom:8px;">✅ <strong>Proposal Applied!</strong> <code>${escapeHtml(JSON.stringify(data))}</code></div>` + box.innerHTML;
+      } catch (e) {
+        box.textContent = 'Error: ' + e;
+      }
+    }
+
+    async function runP1ResolveConflict() {
+      const box = document.getElementById('p1ConnectResult');
+      box.innerHTML = `Running <code>POST /api/stretch/resolve-conflict</code> on <code>${escapeHtml(currentPid)}</code>...`;
+      try {
+        const res = await fetch('/api/stretch/resolve-conflict', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            pid: currentPid,
+            path: currentNid || 'app/auth.py',
+            conflict_text: "<<<<<<< HEAD\nMAX_ATTEMPTS = 5\n=======\nMAX_ATTEMPTS = 3\n>>>>>>> origin/main",
+            ours_code: "MAX_ATTEMPTS = 5\ndef authenticate(token): return True",
+            theirs_code: "MAX_ATTEMPTS = 3\ndef authenticate(token): return bool(token)"
+          })
+        });
+        const data = await res.json();
+        box.innerHTML = `
+          <div style="margin-bottom:6px;"><strong>⚡ Conflict Resolution Rationale:</strong> ${escapeHtml(data.rationale)}</div>
+          <pre class="code-pre">${escapeHtml(data.resolved_code)}</pre>
+        `;
+      } catch (e) {
+        box.textContent = 'Error: ' + e;
+      }
+    }
+
+    async function runP1AgentChat() {
+      const prompt = document.getElementById('p1AgentPrompt').value.trim();
+      const box = document.getElementById('p1AgentResult');
+      if (!prompt) return;
+      box.innerHTML = `🚀 Running 6-step AI coding agent on project <code>${escapeHtml(currentPid)}</code>...`;
+      try {
+        const res = await fetch('/api/agent/chat', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ pid: currentPid, prompt: prompt })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          box.innerHTML = `<pre class="code-pre" style="color:#f87171;">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+          return;
+        }
+        const stepsHtml = (data.steps || []).map(s =>
+          `<div style="padding:6px 8px; background:#111827; border-left:3px solid #8b5cf6; margin-bottom:6px; border-radius:4px;">
+            <strong>Step ${s.step}:</strong> <code>${escapeHtml(s.tool)}(${escapeHtml(s.arg || '')})</code><br/>
+            <span style="color:#d1d5db;">💭 ${escapeHtml(s.thought)}</span>
+            ${s.output ? `<div style="font-family:var(--mono); font-size:11px; color:#9ca3af; margin-top:3px;">Output: ${escapeHtml(s.output)}</div>` : ''}
+          </div>`
+        ).join('');
+        box.innerHTML = `
+          <div style="margin-bottom:8px;"><strong>Agent Explanation:</strong> ${escapeHtml(data.explanation)}</div>
+          <div style="margin-bottom:8px;">${stepsHtml}</div>
+          <div><strong>Generated Patch:</strong><pre class="code-pre" style="margin-top:4px;">${escapeHtml(data.patch)}</pre></div>
+        `;
+      } catch (e) {
+        box.textContent = 'Error: ' + e;
+      }
+    }
+
+    async function runAllP1Checks() {
+      await runP1Summarize();
+      await runP1Architecture();
+      await runP1GenerateTests();
+      await runP1ProposeConnect();
+      await runP1AgentChat();
+    }
+
+    /* ==================== FOLDER UPLOAD & GITHUB CLONE ==================== */
+    function readFilePayload(file, relPath) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const res = String(reader.result || "");
+          const b64 = res.includes(",") ? res.split(",")[1] : res;
+          resolve({ path: relPath, content: b64, is_base64: true });
+        };
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleFolderPicker(fileList) {
+      if (!fileList || fileList.length === 0) return;
+      const filesPayload = [];
+      let folderName = 'uploaded_project';
+      for (const f of fileList) {
+        const rel = (f.webkitRelativePath || f.name).replace(/\\/g, '/');
+        if (rel.includes('/.git/') || rel.includes('/node_modules/') || rel.includes('/.venv/') || rel.includes('/venv/') || rel.includes('/__pycache__/') || rel.includes('/.next/')) continue;
+        if (f.size > 15 * 1024 * 1024) continue;
+        if (rel.includes('/')) folderName = rel.split('/')[0];
+        const item = await readFilePayload(f, rel);
+        if (item) filesPayload.push(item);
+      }
+      await uploadExtractedFiles(folderName, filesPayload);
+    }
+
+    async function uploadExtractedFiles(projectName, filesPayload) {
+      if (!filesPayload.length) {
+        appendTerm('stderr', 'No readable source files found in dropped folder.');
+        return;
+      }
+      appendTerm('system', `[Sandbox Upload] Uploading ${filesPayload.length} files from '${projectName}' into isolated sandbox...`);
+      const res = await fetch('/api/sandbox/upload-folder', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ project_name: projectName, files: filesPayload })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        appendTerm('stderr', `[Upload Error] ${JSON.stringify(data)}`);
+        return;
+      }
+      appendTerm('system', `[Sandbox Ready] Created sandbox '${data.pid}' (${data.file_count} files). Click 'Run Project in Docker' or switch to 'Person 1 — AI & Local LLM Inspector'!`);
+      await loadProjects(data.pid);
+    }
+
+    const dz = document.getElementById('folderDropzone');
+    dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('dragover'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+    dz.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      dz.classList.remove('dragover');
+      const items = e.dataTransfer.items;
+      if (!items) return;
+      const collected = [];
+      let rootName = 'dropped_project';
+
+      async function traverse(entry, prefix = '') {
+        if (!entry) return;
+        if (entry.isFile) {
+          if (prefix.includes('.git/') || prefix.includes('node_modules/') || prefix.includes('.venv/') || prefix.includes('__pycache__/')) return;
+          const file = await new Promise((resolve) => entry.file(resolve));
+          if (file.size <= 15 * 1024 * 1024) {
+            const item = await readFilePayload(file, prefix + file.name);
+            if (item) collected.push(item);
+          }
+        } else if (entry.isDirectory) {
+          if (['.git', 'node_modules', '.venv', '__pycache__'].includes(entry.name)) return;
+          const reader = entry.createReader();
+          const entries = await new Promise((resolve) => reader.readEntries(resolve));
+          for (const child of entries) {
+            await traverse(child, prefix + entry.name + '/');
+          }
+        }
+      }
+
+      for (let i = 0; i < items.length; i++) {
+        const entry = items[i].webkitGetAsEntry && items[i].webkitGetAsEntry();
+        if (entry) {
+          if (entry.isDirectory) rootName = entry.name;
+          await traverse(entry, '');
+        }
+      }
+      await uploadExtractedFiles(rootName, collected);
+    });
+
+    async function cloneGithubRepo() {
+      const url = document.getElementById('githubUrlInput').value.trim();
+      const branch = document.getElementById('githubBranchInput').value.trim();
+      const btn = document.getElementById('cloneBtn');
+      if (!url) return;
+      btn.disabled = true;
+      btn.textContent = '⏳ Cloning into Sandbox...';
+      appendTerm('system', `[GitHub Sandbox] Cloning ${url} into isolated sandbox workspace...`);
+      try {
+        const res = await fetch('/api/sandbox/clone-github', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ repo_url: url, branch: branch || null })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          appendTerm('stderr', `[Clone Error] ${data.detail || JSON.stringify(data)}`);
+          return;
+        }
+        appendTerm('system', `[GitHub Sandbox Ready] Cloned '${data.name}' as project '${data.pid}' (${data.file_count} files).`);
+        switchTab('folder');
+        await loadProjects(data.pid);
+      } catch (e) {
+        appendTerm('stderr', '[Clone Error] ' + e);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '⬇️ Clone into Sandbox';
+      }
+    }
+
+    refreshDockerStatus();
+    refreshLlmStatus();
+    setInterval(refreshDockerStatus, 3000);
+    setInterval(refreshLlmStatus, 8000);
+    loadProjects('demo');
+  </script>
+</body>
+</html>

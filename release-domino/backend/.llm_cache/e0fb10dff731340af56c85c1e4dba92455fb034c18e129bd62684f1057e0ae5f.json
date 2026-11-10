@@ -1,0 +1,19 @@
+{
+  "summary": [
+    "It verifies legacy bearer tokens using a Redis cache.",
+    "It provides utility functions to check user roles (e.g., admin).",
+    "It allows for token revocation and session TTL refreshing."
+  ],
+  "purpose": "This file manages authentication and authorization checks specifically for legacy bearer tokens.",
+  "exports": [
+    "verify_token",
+    "check_admin",
+    "revoke_token",
+    "refresh_session_ttl"
+  ],
+  "risks": [
+    "The token verification logic is tied to a specific 'bearer_legacy_' prefix, limiting flexibility.",
+    "Token revocation relies on setting a TTL of 0, which might not guarantee immediate removal across all cache implementations.",
+    "The user object creation in verify_token is hardcoded for 'customer' role and 'gold' tier, lacking dynamic user data retrieval from the database (db.py)."
+  ]
+}

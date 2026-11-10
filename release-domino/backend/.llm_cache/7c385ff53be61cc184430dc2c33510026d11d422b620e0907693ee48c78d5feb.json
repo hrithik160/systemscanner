@@ -1,0 +1,3 @@
+{
+  "summary": "The project uses FastAPI and Pydantic for the backend, with Redis as the infrastructure for caching. The Redis cache is accessed through imports in the redis_cache.py file."
+}

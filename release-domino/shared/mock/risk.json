@@ -1,0 +1,32 @@
+{
+  "score": 77,
+  "verdict": "HOLD",
+  "factors": [
+    { "name": "Code Churn (+48 / -12 lines)", "value": 0.30, "weight": 0.30, "contribution": 9.0 },
+    { "name": "Defect Gravity (7.0/10 history)", "value": 0.70, "weight": 0.30, "contribution": 21.0 },
+    { "name": "Coverage Gap (20% est. coverage)", "value": 0.80, "weight": 0.25, "contribution": 20.0 },
+    { "name": "Blast Radius (Crown Jewel impacted)", "value": 0.80, "weight": 0.15, "contribution": 12.0 },
+    { "name": "Merge Conflict Penalty (auth.py vs origin/main)", "value": 1.0, "weight": 0.15, "contribution": 15.0 }
+  ],
+  "changed_nodes": ["app/auth.py", "app/checkout.py"],
+  "impacted": [
+    { "id": "app/auth.py", "impact": 1.0, "depth": 0 },
+    { "id": "app/login_route.py", "impact": 0.85, "depth": 1 },
+    { "id": "app/checkout.py", "impact": 0.85, "depth": 1 },
+    { "id": "app/orders_route.py", "impact": 0.72, "depth": 1 },
+    { "id": "app/main.py", "impact": 0.68, "depth": 2 },
+    { "id": "app/payment_gateway.py", "impact": 0.61, "depth": 2 }
+  ],
+  "reasons": [
+    "app/auth.py changed 60 lines (+48 / -12), has 7.0/10 defect history and only 20% estimated coverage, and 5 downstream components depend on it.",
+    "Crown Jewel 'app/checkout.py' and 'app/main.py' are directly in the blast radius of changes to 'app/auth.py' (blast_n = 0.80).",
+    "Merge-conflict radar detected 1 conflict in app/auth.py against origin/main (+15 risk penalty).",
+    "Adding a Redis rate limiter or unit tests for app/auth.py reduces the release risk score from 77 (HOLD) to 32 (GO)."
+  ],
+  "coverage_estimated": true,
+  "computed_at": 1762675200000,
+  "baseline_score": 77,
+  "baseline_verdict": "HOLD",
+  "test_penalty": 0,
+  "merge_penalty": 15
+}

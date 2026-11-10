@@ -1,0 +1,13 @@
+{
+  "name": "frontend/dummy/src/AnimatedHelloWorld.jsx",
+  "code": "import React, { useState, useEffect } from 'react';\n\nconst AnimatedHelloWorld = () => {\n  const [isVisible, setIsVisible] = useState(false);\n  const [message, setMessage] = useState('Hello World!');\n\n  const handleShow = () => {\n    setIsVisible(true);\n  };\n\n  // Simple animation effect using state change\n  useEffect(() => {\n    if (isVisible) {\n      const timer = setTimeout(() => {\n        // Simulate a brief animation/display time\n        setMessage('\u2728 Animated Hello World! \u2728');\n      }, 500);\n      return () => clearTimeout(timer);\n    }\n  }, [isVisible]);\n\n  return (\n    <div>\n      {/* CRITICAL UNBREAKABLE CODE RULE 1: Must render a launcher button if visibility is toggled/managed */}\n      {!isVisible && (\n        <button onClick={handleShow} style={{ padding: '10px 20px', fontSize: '16px', cursor: 'pointer' }}>\n          \ud83d\ude80 Launch Animated Greeting\n        </button>\n      )}\n\n      {/* Display the animated content when visible */}\n      {isVisible && (\n        <div \n          style={{\n            padding: '20px',\n            border: '2px solid #4CAF50',\n            borderRadius: '8px',\n            backgroundColor: '#e8f5e9',\n            textAlign: 'center',\n            transition: 'all 0.5s ease-in-out',\n            opacity: 1,\n            transform: 'scale(1)'\n          }}\n        >\n          <h1 style={{ color: '#2e7d32' }}>{message}</h1>\n          <p style={{ marginTop: '10px', color: '#388e3c' }}>This message appears after the button is pressed!</p>\n          <button \n            onClick={() => setIsVisible(false)} \n            style={{ marginTop: '15px', padding: '8px 15px', cursor: 'pointer' }}\n          > \n            Close\n          </button>\n        </div>\n      )}\n    </div>\n  );\n};\n\nexport default AnimatedHelloWorld;",
+  "lang": "jsx",
+  "is_crown_jewel": true,
+  "suggested_inputs": [
+    "frontend/dummy/src/App.jsx"
+  ],
+  "suggested_outputs": [
+    "frontend/dummy/src/App.jsx"
+  ],
+  "explanation": "This component, AnimatedHelloWorld.jsx, implements the requested functionality. It uses React state (useState) to manage visibility and a useEffect hook to trigger a message change after a delay, simulating an animation sequence. Crucially, it adheres to the 'VISIBLE UI RULE': the component renders a prominent launch button when the content is hidden, allowing the user to trigger the feature. It uses pure JSX/JavaScript and exports a single default component."
+}

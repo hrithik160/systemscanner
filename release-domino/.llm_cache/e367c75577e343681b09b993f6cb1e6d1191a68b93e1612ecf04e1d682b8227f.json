@@ -1,0 +1,5 @@
+{
+  "patch": "@@ -1,1 +1,1 @@\n- from auth import verify_token, check_admin, revoke_token, refresh_session_ttl\n+ from auth import verify_token, check_admin, revoke_token, refresh_session_ttl, check_rate_limit\n",
+  "endpoint": "rate_limiter_sandbox.py:check_rate_limit",
+  "rationale": "The `check_rate_limit` function from `auth.py` is added to `rate_limiter_sandbox.py` to allow rate limiting based on IP addresses. This function is called within the `check_rate_limit` function in `rate_limiter_sandbox.py` to ensure that the rate limit is checked before allowing access to the sandbox."
+}

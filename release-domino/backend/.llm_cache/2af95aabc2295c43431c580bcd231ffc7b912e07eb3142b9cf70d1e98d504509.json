@@ -1,0 +1,3 @@
+{
+  "summary": "The core backend logic is built using FastAPI and Python, leveraging Pydantic for data validation. Data persistence is managed through a combination of a SQL Database and SQLite for specific weight storage, while Redis handles caching and task queuing. The user interface is presented via Streamlit, supplemented by TypeScript/JavaScript components for frontend interactivity."
+}

@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "types": ["vite/client"],
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Relaxed rules so it won't complain about unused imports or 'type' keywords */
+    "verbatimModuleSyntax": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+
+    /* Alias so '../../../shared/types' works from anywhere without counting folders */
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["../shared/*"],
+      "../../../shared/*": ["../shared/*"],
+      "../../shared/*": ["../shared/*"]
+    }
+  },
+  "include": ["src", "../shared"]
+}

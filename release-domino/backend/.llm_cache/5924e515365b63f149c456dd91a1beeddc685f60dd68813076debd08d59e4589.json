@@ -1,0 +1,11 @@
+{
+  "name": "HomeButton.jsx",
+  "code": "import React from 'react';\nimport { useNavigate } from 'react-router-dom';\n\n/**\n * A button component that logs a greeting and navigates to the /home route.\n * @returns {JSX.Element}\n */\nconst HomeButton = () => {\n  const navigate = useNavigate();\n\n  const handleClick = () => {\n    console.log('hello world');\n    navigate('/home');\n  };\n\n  return (\n    <button onClick={handleClick}>\n      Go to Home\n    </button>\n  );\n};\n\nexport default HomeButton;",
+  "lang": "js",
+  "is_crown_jewel": false,
+  "suggested_inputs": [
+    "src/App.jsx"
+  ],
+  "suggested_outputs": [],
+  "explanation": "This component provides a clickable button that logs 'hello world' to the console upon interaction. It uses react-router-dom's useNavigate hook to programmatically navigate the user to the /home route."
+}

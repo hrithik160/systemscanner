@@ -1,0 +1,3 @@
+{
+  "summary": "The project utilizes a modern stack featuring a FastAPI backend built with Python and Pydantic for data validation. A React frontend, written in TypeScript/JavaScript, handles the user interface. All application data is persisted and managed through a connected SQL Database."
+}

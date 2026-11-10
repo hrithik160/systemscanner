@@ -1,0 +1,3 @@
+{
+  "summary": "The project utilizes a Python backend integrated with a TypeScript/JavaScript frontend. Data persistence is managed by a PostgreSQL primary database, supplemented by a local SQLite store for specific needs. Redis is employed for caching and implementing rate limiting across the application."
+}

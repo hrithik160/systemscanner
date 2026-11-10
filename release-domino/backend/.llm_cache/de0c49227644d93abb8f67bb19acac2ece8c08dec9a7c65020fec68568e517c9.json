@@ -1,0 +1,16 @@
+{
+  "summary": [
+    "Defines a comprehensive theme object for the mobile application.",
+    "Includes color palettes, typography settings, and spacing constants.",
+    "Specifies various shadow styles for different UI components like cards and modals."
+  ],
+  "purpose": "This file centralizes all design tokens, such as colors, spacing, and typography, used throughout the mobile application.",
+  "exports": [
+    "THEME"
+  ],
+  "risks": [
+    "No runtime validation is present; incorrect usage of theme values could lead to visual inconsistencies.",
+    "Hardcoded values might require manual updates across multiple files if design system changes occur.",
+    "No mechanism exists to handle theme switching (e.g., dark mode) as it is static."
+  ]
+}

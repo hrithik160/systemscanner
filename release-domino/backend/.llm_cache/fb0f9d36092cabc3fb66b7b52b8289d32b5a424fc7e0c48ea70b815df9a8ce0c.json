@@ -1,0 +1,9 @@
+{
+  "warnings": [
+    {
+      "warning_type": "Uncached route hitting primary DB",
+      "severity": "High",
+      "recommendation": "Implement caching (e.g., Redis, in-memory cache) for frequently accessed read operations to reduce primary DB load."
+    }
+  ]
+}

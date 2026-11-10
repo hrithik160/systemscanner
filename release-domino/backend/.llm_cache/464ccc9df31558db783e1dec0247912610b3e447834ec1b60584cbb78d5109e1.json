@@ -1,0 +1,4 @@
+{
+  "healed_code": "def calculate_discount(price, pct):\n  if price < 0:\n    return 0\n  return price * pct",
+  "fix_summary": "Added a colon after the 'if' condition to complete the Python syntax."
+}

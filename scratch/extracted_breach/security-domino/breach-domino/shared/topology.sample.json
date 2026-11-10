@@ -1,0 +1,32 @@
+{
+  "nodes": [
+    {"id":"node-printer-01","label":"Office Printer","type":"IoT","cvss_score":8.1,"vulnerabilities":["CVE-2024-3400"],"is_crown_jewel":false,"status":"compromised","refs":{"ip":"10.0.1.24","hostname":"prn-01"},"pos":{"x":80,"y":250}},
+    {"id":"node-dev-laptop","label":"Dev Laptop","type":"Workstation","cvss_score":7.4,"vulnerabilities":["CVE-2024-6387"],"is_crown_jewel":false,"status":"secure","refs":{"ip":"10.0.2.18","hostname":"dev-ws-18"},"pos":{"x":360,"y":130}},
+    {"id":"node-sre-workstation","label":"SRE Workstation","type":"Workstation","cvss_score":5.2,"vulnerabilities":["CVE-2023-22515"],"is_crown_jewel":false,"status":"secure","refs":{"ip":"10.0.2.22","hostname":"sre-ws-22"},"pos":{"x":360,"y":390}},
+    {"id":"node-build-srv","label":"Build Server","type":"Server","cvss_score":8.8,"vulnerabilities":["CVE-2024-3094"],"is_crown_jewel":false,"status":"secure","refs":{"ip":"10.0.3.10","hostname":"build-01"},"pos":{"x":650,"y":130}},
+    {"id":"node-app-server","label":"Application Server","type":"Server","cvss_score":6.4,"vulnerabilities":["CVE-2023-44487"],"is_crown_jewel":false,"status":"secure","refs":{"ip":"10.0.3.21","hostname":"app-01"},"pos":{"x":650,"y":390}},
+    {"id":"node-iam-cicd","label":"CI/CD Identity","type":"IAM","cvss_score":9.1,"vulnerabilities":["IAM-OVERPRIVILEGED"],"is_crown_jewel":false,"status":"secure","refs":{"ip":"iam://cicd-runner","hostname":"cicd-role"},"pos":{"x":950,"y":130}},
+    {"id":"node-iam-admin","label":"Admin Identity","type":"IAM","cvss_score":9.4,"vulnerabilities":["IAM-TRUST-CHAIN"],"is_crown_jewel":false,"status":"secure","refs":{"ip":"iam://admin","hostname":"platform-admin"},"pos":{"x":1220,"y":250}},
+    {"id":"node-prod-db","label":"Production Database","type":"Database","cvss_score":9.8,"vulnerabilities":["CVE-2024-21762","EXPOSED-CREDENTIAL"],"is_crown_jewel":true,"status":"secure","refs":{"ip":"10.0.8.10","hostname":"prod-primary-db"},"pos":{"x":1510,"y":250}},
+    {"id":"node-cache","label":"Redis Cache","type":"Server","cvss_score":4.2,"vulnerabilities":["CVE-2023-41080"],"is_crown_jewel":false,"status":"secure","refs":{"ip":"10.0.4.15","hostname":"redis-01"},"pos":{"x":950,"y":480}},
+    {"id":"node-storage","label":"Object Storage","type":"Database","cvss_score":3.1,"vulnerabilities":[],"is_crown_jewel":false,"status":"secure","refs":{"ip":"10.0.9.20","hostname":"artifact-store"},"pos":{"x":1220,"y":500}},
+    {"id":"node-monitor","label":"Monitoring Agent","type":"Server","cvss_score":2.8,"vulnerabilities":[],"is_crown_jewel":false,"status":"secure","refs":{"ip":"10.0.5.7","hostname":"monitor-01"},"pos":{"x":80,"y":520}},
+    {"id":"node-vpn","label":"VPN Gateway","type":"Server","cvss_score":7.2,"vulnerabilities":["CVE-2024-3400"],"is_crown_jewel":false,"status":"secure","refs":{"ip":"10.0.0.1","hostname":"vpn-edge"},"pos":{"x":360,"y":650}}
+  ],
+  "edges": [
+    {"id":"edge-printer-dev","source":"node-printer-01","target":"node-dev-laptop","protocol":"SMB","exploit_time_sec":3,"status":"open"},
+    {"id":"edge-printer-sre","source":"node-printer-01","target":"node-sre-workstation","protocol":"SMB","exploit_time_sec":5,"status":"open"},
+    {"id":"edge-dev-build","source":"node-dev-laptop","target":"node-build-srv","protocol":"SSH","exploit_time_sec":4,"status":"open"},
+    {"id":"edge-sre-app","source":"node-sre-workstation","target":"node-app-server","protocol":"HTTPS","exploit_time_sec":7,"status":"open"},
+    {"id":"edge-build-iam","source":"node-build-srv","target":"node-iam-cicd","protocol":"IAM_Trust","exploit_time_sec":2,"status":"open"},
+    {"id":"edge-app-cache","source":"node-app-server","target":"node-cache","protocol":"HTTPS","exploit_time_sec":4,"status":"open"},
+    {"id":"edge-cache-storage","source":"node-cache","target":"node-storage","protocol":"HTTPS","exploit_time_sec":8,"status":"open"},
+    {"id":"edge-iam-admin","source":"node-iam-cicd","target":"node-iam-admin","protocol":"IAM_Trust","exploit_time_sec":2,"status":"open"},
+    {"id":"edge-admin-db","source":"node-iam-admin","target":"node-prod-db","protocol":"HTTPS","exploit_time_sec":3,"status":"open"},
+    {"id":"edge-monitor-printer","source":"node-monitor","target":"node-printer-01","protocol":"SSH","exploit_time_sec":10,"status":"open"},
+    {"id":"edge-vpn-dev","source":"node-vpn","target":"node-dev-laptop","protocol":"SSH","exploit_time_sec":4,"status":"open"},
+    {"id":"edge-vpn-sre","source":"node-vpn","target":"node-sre-workstation","protocol":"SSH","exploit_time_sec":4,"status":"open"},
+    {"id":"edge-app-iam","source":"node-app-server","target":"node-iam-cicd","protocol":"IAM_Trust","exploit_time_sec":9,"status":"open"},
+    {"id":"edge-app-db","source":"node-app-server","target":"node-prod-db","protocol":"HTTPS","exploit_time_sec":14,"status":"open"}
+  ]
+}

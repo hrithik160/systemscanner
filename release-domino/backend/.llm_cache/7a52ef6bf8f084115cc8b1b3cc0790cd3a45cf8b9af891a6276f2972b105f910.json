@@ -1,0 +1,3 @@
+{
+  "summary": "The project utilizes a Python backend integrated with a TypeScript/JavaScript frontend. Data persistence is managed primarily through a PostgreSQL primary database. A local SQLite store is also available for localized operations, with no direct Node-to-Infrastructure links detected."
+}

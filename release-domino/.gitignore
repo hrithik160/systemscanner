@@ -1,0 +1,14 @@
+# Generated demo repositories (run `python demo/make_demo_repo.py` to generate locally)
+demo/demo_shop_repo/
+demo/*_origin.git/
+
+# Python virtual environments & caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+rd_coverage_out.json
+rd_jest_out.json
+.rd_deps_cache/
